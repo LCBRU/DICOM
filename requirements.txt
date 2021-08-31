@@ -1,0 +1,6 @@
+pywin32
+selenium
+pyodbc
+pandas
+numpy
+bs4
