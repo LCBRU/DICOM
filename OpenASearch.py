@@ -4,6 +4,7 @@ import win32com.client as win32
 #import urllib
 #import scrapy
 from time import sleep
+from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -26,8 +27,7 @@ print(ListToDicom.columns)
 print(ListToDicom.head(1))
 print('How may outstanting?')
 print(ListToDicom.index.max())
-NextInList = ListToDicom.at[1,'MRN']
-print(NextInList)
+
 
 #select the search button
 driver = webdriver.Ie()
@@ -59,6 +59,13 @@ login.click()
 PacsWindow = driver.window_handles
 print(PacsWindow)
 
+################ start iterations
+i=1 #needs to be set to 0 and recover from a zero images error when going live
+NextInList = ListToDicom.at[i,'MRN']
+date_to_find = datetime.utcfromtimestamp(ListToDicom['ct_date_time_start'].values[i].astype(datetime)/1_000_000_000).strftime('%m-%d-%Y')
+print(NextInList)
+print(date_to_find)
+
 #open advanced search and find its handle and switch to window
 driver.execute_script("openSearch(false);")
 sleep(1)
@@ -74,30 +81,34 @@ driver.switch_to.frame("LIST")
 sleep(1)
 driver.find_element_by_name("searchPatientId").send_keys(NextInList)
 driver.find_element_by_name("searchFirstName").click() # click away from searchPatientId to enable searchStudyDescr
-driver.execute_script("dialogForm.searchOrderStatus[8].click();") # sets to complete
+#driver.execute_script("dialogForm.searchOrderStatus[8].click();") # sets to complete, however we mhy also want read offline...
 driver.execute_script("dialogForm.searchImgCnt.click();") #only studys with images
 driver.find_element_by_name("searchStudyDescr").send_keys("CT Cardiac angiogram")
 
-soup = BeautifulSoup(driver.page_source,'lxml')
-print(soup.prettify())
-
-#driver.switch_to.window(advsearchwindow)  #driver.switch_to.frame("TOOLBAR")
-driver.execute_script("parent.LIST.formSubmitted();")
-
-##driver.execute_script("goSearch();") #sumits the search, unfortunatly this then hangs!!!
-###driver.execute_script("_search()") unfortunatly this then hangs too!!!
-## driver.execute_script("parent.window.close();")
-#driver.execute_script("parent.TOOLBAR._submit();")
-driver.execute_script("parent.TOOLBAR.goSearch()")
-#driver.execute_script("parent.LIST.goSearch()")
+driver.switch_to.window(advsearchwindow)
+driver.switch_to.frame("TOOLBAR")
+butts = driver.find_elements_by_class_name("search_button")
+print("executeing...the submit...")
+print(butts)
+butts[0].click()
+print("still not locked...")
 sleep(3)
 #driver.window_handles by monitoring the window_handles it seems to close the connection!!!!!!!!!!
-#print(PacsWindow)
+print(PacsWindow)
+print(driver.window_handles)
 
-driver.switch_to.window(PacsWindow)
+print("switching...PacsWindow")
+driver.switch_to.window(PacsWindow[0])
+print("switching...tableFrame")
 driver.switch_to.frame("tableFrame")
-soup = BeautifulSoup(driver.page_source,'lxml')
-print(soup.prettify())
+print("executeing...stopTooltipTimer();viewSelectedStudy_Click(0);")
+driver.execute_script("stopTooltipTimer(false);viewSelectedStudy_Click(0);")
+
+#soup = BeautifulSoup(driver.page_source,'lxml')
+#soup.find_all("function")
+
+
+#print(soup.prettify())
 
 #driver.find_element_by_id("id0").click() #open Study results
 
@@ -152,4 +163,15 @@ print(soup.prettify())
 #   title = re.findall("<TITLE>.*</TITLE>",AdvSearhcPage)
 #   pprint(title)
 
-soup.find_all(function)
+#FAILS!!!
+#driver.execute_script("goSearch();") #sumits the search, unfortunatly this then hangs!!!
+#driver.execute_script("_search()") unfortunatly this then hangs too!!!
+#driver.execute_script("parent.window.close();")
+#driver.execute_script("parent.TOOLBAR._submit();")
+#driver.execute_script("parent.LIST.goSearch()")
+#print("executeing...parent.TOOLBAR.goSearch()")
+#driver.execute_script("parent.TOOLBAR.goSearch()")
+
+
+#soup = BeautifulSoup(driver.page_source,'lxml')
+#print(soup.prettify())
