@@ -1,5 +1,5 @@
 import win32com.client as win32
-#import requests, re
+import requests, re
 #import httplib2
 #import urllib
 #import scrapy
@@ -60,8 +60,9 @@ PacsWindow = driver.window_handles
 print(PacsWindow)
 
 ################ start iterations
-i=1 #needs to be set to 0 and recover from a zero images error when going live
-NextInList = ListToDicom.at[i,'MRN']
+i=3 #needs to be set to 0 and recover from a zero images error when going live
+NextInList = ListToDicom.at['RWES2001819','MRN'] #for testing
+#NextInList = ListToDicom.at[1,'MRN']   #for iterating
 date_to_find = datetime.utcfromtimestamp(ListToDicom['ct_date_time_start'].values[i].astype(datetime)/1_000_000_000).strftime('%m-%d-%Y')
 print(NextInList)
 print(date_to_find)
@@ -99,10 +100,16 @@ print(driver.window_handles)
 
 print("switching...PacsWindow")
 driver.switch_to.window(PacsWindow[0])
-print("switching...tableFrame")
 driver.switch_to.frame("tableFrame")
+soup = BeautifulSoup(driver.page_source,'lxml')
+html_tags = soup.html
+html_tags.strippted_strings
+for strings in html_tags.stripped_strings:
+    print(strings)
+
+
 print("executeing...stopTooltipTimer();viewSelectedStudy_Click(0);")
-driver.execute_script("stopTooltipTimer(false);viewSelectedStudy_Click(0);")
+#driver.execute_script("stopTooltipTimer(false);viewSelectedStudy_Click(0);")
 
 #soup = BeautifulSoup(driver.page_source,'lxml')
 #soup.find_all("function")
@@ -172,6 +179,6 @@ driver.execute_script("stopTooltipTimer(false);viewSelectedStudy_Click(0);")
 #print("executeing...parent.TOOLBAR.goSearch()")
 #driver.execute_script("parent.TOOLBAR.goSearch()")
 
-
+#td_tags[23][break-word]
 #soup = BeautifulSoup(driver.page_source,'lxml')
 #print(soup.prettify())
