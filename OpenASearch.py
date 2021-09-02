@@ -104,8 +104,11 @@ driver.switch_to.frame("tableFrame")
 soup = BeautifulSoup(driver.page_source,'lxml')
 # for the next search to work ensure in the setting in the viewer that the date column is the only right aligned column
 # then the filter will be restricted to the dates.
-find_the_first_date = soup.find(style = "WORD-WRAP: break-word", align = 'right')
-find_the_dates = soup.find_all(style = "WORD-WRAP: break-word", align = 'right')
+find_the_first_date = soup.find('td', style = "WORD-WRAP: break-word", align = 'right')
+find_the_dates = soup.find_all('td', style = "WORD-WRAP: break-word", align = 'right')
+pprint(find_the_first_date)
+pprint(find_the_dates)
+
 html_tags = soup.html
 html_tags.strippted_strings
 for strings in html_tags.stripped_strings:
