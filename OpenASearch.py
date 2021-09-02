@@ -60,9 +60,9 @@ PacsWindow = driver.window_handles
 print(PacsWindow)
 
 ################ start iterations
-i=3 #needs to be set to 0 and recover from a zero images error when going live
-NextInList = ListToDicom.at['RWES2001819','MRN'] #for testing
-#NextInList = ListToDicom.at[1,'MRN']   #for iterating
+i=4 #needs to be set to 0 and recover from a zero images error when going live
+NextInList = ListToDicom.at[i,'MRN']
+NextInList = 'RWES3137509'
 date_to_find = datetime.utcfromtimestamp(ListToDicom['ct_date_time_start'].values[i].astype(datetime)/1_000_000_000).strftime('%m-%d-%Y')
 print(NextInList)
 print(date_to_find)
@@ -104,10 +104,14 @@ driver.switch_to.frame("tableFrame")
 soup = BeautifulSoup(driver.page_source,'lxml')
 # for the next search to work ensure in the setting in the viewer that the date column is the only right aligned column
 # then the filter will be restricted to the dates.
-find_the_first_date = soup.find('td', style = "WORD-WRAP: break-word", align = 'right')
-find_the_dates = soup.find_all('td', style = "WORD-WRAP: break-word", align = 'right')
-pprint(find_the_first_date)
-pprint(find_the_dates)
+
+
+pprint(soup.find('td', string = re.compile(date_to_find)))
+number_of_Dicoms_on_right_Date = len(soup.find_all('td', string = re.compile(date_to_find)))
+print('number of Dicoms on date of intrest')
+print(number_of_Dicoms_on_right_Date)
+# need somthing like the following....    soup.find('td', string = re.compile(date_to_find)).click()
+
 
 html_tags = soup.html
 html_tags.strippted_strings
@@ -189,3 +193,8 @@ print("executeing...stopTooltipTimer();viewSelectedStudy_Click(0);")
 #td_tags[23][break-word]
 #soup = BeautifulSoup(driver.page_source,'lxml')
 #print(soup.prettify())
+
+#find_the_first_date = soup.find('td', style = "WORD-WRAP: break-word", align = 'right')
+#find_the_dates = soup.find_all('td', style = "WORD-WRAP: break-word", align = 'right')
+#pprint(find_the_first_date)
+#pprint(find_the_dates)
