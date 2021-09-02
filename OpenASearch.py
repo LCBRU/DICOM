@@ -98,6 +98,7 @@ sleep(3)
 print(PacsWindow)
 print(driver.window_handles)
 
+
 print("switching...PacsWindow")
 driver.switch_to.window(PacsWindow[0])
 driver.switch_to.frame("tableFrame")
