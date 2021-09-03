@@ -102,44 +102,26 @@ print(driver.window_handles)
 print("switching...PacsWindow")
 driver.switch_to.window(PacsWindow[0])
 driver.switch_to.frame("tableFrame")
+driver.find_element_by_name("listTableForm").click()
+
 soup = BeautifulSoup(driver.page_source,'lxml')
-# for the next search to work ensure in the setting in the viewer that the date column is the only right aligned column
-# then the filter will be restricted to the dates.
-
-
 pprint(soup.find('td', string = re.compile(date_to_find)))
 number_of_Dicoms_on_right_Date = len(soup.find_all('td', string = re.compile(date_to_find)))
 print('number of Dicoms on date of intrest')
 print(number_of_Dicoms_on_right_Date)
-# need somthing like the following....    soup.find('td', string = re.compile(date_to_find)).click()
+# Now to record the number of in range (should only be 1 for yes or 0 for nune however it's possible there are
+# more then one.
+
+# Select the first in the list if there is only one
+if number_of_Dicoms_on_right_Date==1:
+    driver.find_element_by_name("listTableForm").click()
 
 
-html_tags = soup.html
-html_tags.strippted_strings
-for strings in html_tags.stripped_strings:
-    print(strings)
 
-
-print("executeing...stopTooltipTimer();viewSelectedStudy_Click(0);")
-#driver.execute_script("stopTooltipTimer(false);viewSelectedStudy_Click(0);")
-
-#soup = BeautifulSoup(driver.page_source,'lxml')
-#soup.find_all("function")
-
-
-#print(soup.prettify())
-
-#driver.find_element_by_id("id0").click() #open Study results
-
-
-# Ref. Phys <> DO NOT USE - Referrer must be specified
-
-##########
-
-########## Select the first in the list
-##########
 
 ########## Export the image
+# sleep(600) # 10 expect a ten minute download time.
+#select using win32 the other program window
 #left click
 #entire study
 #file type DICOM(*.dcm)
@@ -152,6 +134,9 @@ print("executeing...stopTooltipTimer();viewSelectedStudy_Click(0);")
 ###################################################
 #################     Apendix     #################
 ###################################################
+#print(soup.prettify())
+#driver.find_element_by_id("id0").click() #open Study results
+# Ref. Phys <> DO NOT USE - Referrer must be specified
 
 #qsearchstring = \
 #driver.find_element_by_name("qsearchstring").send_keys(NextInList)
