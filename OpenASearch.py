@@ -16,6 +16,7 @@ import numpy as np
 from bs4 import BeautifulSoup
 import pyodbc
 import pandas as pd
+import os
 conn = pyodbc.connect('Driver={SQL Server};'
                       r'Server=UHLSQLPRIME01\UHLBRICCSDB;'
                       'Database=i2b2_app03_b1_data;'
@@ -60,9 +61,11 @@ PacsWindow = driver.window_handles
 print(PacsWindow)
 
 ################ start iterations
-i=4 #needs to be set to 0 and recover from a zero images error when going live
-NextInList = ListToDicom.at[i,'MRN']
-NextInList = 'RWES3137509'
+i = 0
+NextInList = ListToDicom.at[i, 'MRN']
+NextInList = 'RWES0112807'   ############################HARD CODED FOR TESTING, REMOVE TO GO LIVE
+NextInList_bpt = ListToDicom.at[i, 'BptNumber']
+
 date_to_find = datetime.utcfromtimestamp(ListToDicom['ct_date_time_start'].values[i].astype(datetime)/1_000_000_000).strftime('%m-%d-%Y')
 print(NextInList)
 print(date_to_find)
@@ -89,15 +92,11 @@ driver.find_element_by_name("searchStudyDescr").send_keys("CT Cardiac angiogram"
 driver.switch_to.window(advsearchwindow)
 driver.switch_to.frame("TOOLBAR")
 butts = driver.find_elements_by_class_name("search_button")
-print("executeing...the submit...")
-print(butts)
 butts[0].click()
-print("still not locked...")
 sleep(3)
 #driver.window_handles by monitoring the window_handles it seems to close the connection!!!!!!!!!!
 print(PacsWindow)
 print(driver.window_handles)
-
 
 print("switching...PacsWindow")
 driver.switch_to.window(PacsWindow[0])
@@ -112,21 +111,28 @@ print(number_of_Dicoms_on_right_Date)
 # Now to record the number of in range (should only be 1 for yes or 0 for nune however it's possible there are
 # more then one.
 
-# Select the first in the list if there is only one
+# if there is only valid one in the list, create new folder and Select
 if number_of_Dicoms_on_right_Date==1:
-    driver.find_element_by_name("listTableForm").click()
+    assert isinstance(driver.find_element_by_name("listTableForm").click, object)
 
-
+    path = os.path.join('C:\\briccs_ct\\', NextInList_bpt)
+    print("folder to save is")
+    print(path)
+    if not os.path.exists(path):
+        os.makedirs(path)
+    #driver.find_element_by_name("listTableForm").click()
 
 
 ########## Export the image
-# sleep(600) # 10 expect a ten minute download time.
+# sleep(6) # expect a the page to take a while to load.
 #select using win32 the other program window
 #left click
 #entire study
 #file type DICOM(*.dcm)
-#Root folder to be bptnumber
 #option - Anonymise checked
+#Root folder to be bptnumber
+# sleep(600) # 10 expect a ten minute download time.
+# exit the software with the default 'just close the study and exit'
 ##########
 
 
