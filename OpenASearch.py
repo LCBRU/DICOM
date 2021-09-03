@@ -4,7 +4,7 @@ import requests, re
 #import urllib
 #import scrapy
 from time import sleep
-from datetime import datetime
+from datetime import *
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -63,7 +63,7 @@ print(PacsWindow)
 ################ start iterations
 i = 0
 NextInList = ListToDicom.at[i, 'MRN']
-NextInList = 'RWES0112807'   ############################HARD CODED FOR TESTING, REMOVE TO GO LIVE
+#NextInList = 'RWES0112807'   ############################HARD CODED FOR TESTING, REMOVE TO GO LIVE
 NextInList_bpt = ListToDicom.at[i, 'BptNumber']
 
 date_to_find = datetime.utcfromtimestamp(ListToDicom['ct_date_time_start'].values[i].astype(datetime)/1_000_000_000).strftime('%m-%d-%Y')
@@ -101,7 +101,6 @@ print(driver.window_handles)
 print("switching...PacsWindow")
 driver.switch_to.window(PacsWindow[0])
 driver.switch_to.frame("tableFrame")
-driver.find_element_by_name("listTableForm").click()
 
 soup = BeautifulSoup(driver.page_source,'lxml')
 pprint(soup.find('td', string = re.compile(date_to_find)))
@@ -113,14 +112,17 @@ print(number_of_Dicoms_on_right_Date)
 
 # if there is only valid one in the list, create new folder and Select
 if number_of_Dicoms_on_right_Date==1:
-    assert isinstance(driver.find_element_by_name("listTableForm").click, object)
-
     path = os.path.join('C:\\briccs_ct\\', NextInList_bpt)
     print("folder to save is")
     print(path)
     if not os.path.exists(path):
         os.makedirs(path)
-    #driver.find_element_by_name("listTableForm").click()
+    driver.find_element_by_name("listTableForm").click
+to_log = np.array([NextInList + ',' + NextInList_bpt + ',' + str(number_of_Dicoms_on_right_Date) + ',' + str(datetime.now())])
+print(to_log)
+with open("C:\\briccs_ct\\results.csv", "ab") as f:
+    np.savetxt(f, (to_log), fmt='%s', delimiter=' ')
+
 
 
 ########## Export the image
@@ -132,7 +134,7 @@ if number_of_Dicoms_on_right_Date==1:
 #option - Anonymise checked
 #Root folder to be bptnumber
 # sleep(600) # 10 expect a ten minute download time.
-# exit the software with the default 'just close the study and exit'
+# find icon (done).Click
 ##########
 
 
