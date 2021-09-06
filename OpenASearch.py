@@ -1,4 +1,4 @@
-import win32com.client as win32
+import pyautogui
 import requests, re
 #import httplib2
 #import urllib
@@ -17,6 +17,7 @@ from bs4 import BeautifulSoup
 import pyodbc
 import pandas as pd
 import os
+from pathlib import Path
 conn = pyodbc.connect('Driver={SQL Server};'
                       r'Server=UHLSQLPRIME01\UHLBRICCSDB;'
                       'Database=i2b2_app03_b1_data;'
@@ -33,8 +34,8 @@ print(ListToDicom.index.max())
 #select the search button
 driver = webdriver.Ie()
 driver.implicitly_wait(3)
-driver.maximize_window()
 driver.get("https://uvweb.pacs.uhl-tr.nhs.uk/login.jsp")
+driver.maximize_window()
 
 #LogMeIn
 #  .env
@@ -61,7 +62,7 @@ PacsWindow = driver.window_handles
 print(PacsWindow)
 
 ################ start iterations
-i = 0
+i = 8
 NextInList = ListToDicom.at[i, 'MRN']
 #NextInList = 'RWES0112807'   ############################HARD CODED FOR TESTING, REMOVE TO GO LIVE
 NextInList_bpt = ListToDicom.at[i, 'BptNumber']
@@ -71,6 +72,12 @@ print(NextInList)
 print(date_to_find)
 
 #open advanced search and find its handle and switch to window
+
+PacsWindow = driver.window_handles
+print(PacsWindow)
+driver.current_url
+driver.switch_to.window(PacsWindow[0])
+driver.current_url
 driver.execute_script("openSearch(false);")
 sleep(1)
 advsearchwindow = list(set(driver.window_handles) - set(PacsWindow))[0]
@@ -117,12 +124,32 @@ if number_of_Dicoms_on_right_Date==1:
     print(path)
     if not os.path.exists(path):
         os.makedirs(path)
-    driver.find_element_by_name("listTableForm").click
+    listTableForm = driver.find_element_by_name("listTableForm")
+    sleep(1)
+    listTableForm.click()
 to_log = np.array([NextInList + ',' + NextInList_bpt + ',' + str(number_of_Dicoms_on_right_Date) + ',' + str(datetime.now())])
 print(to_log)
 with open("C:\\briccs_ct\\results.csv", "ab") as f:
     np.savetxt(f, (to_log), fmt='%s', delimiter=' ')
 
+# ----- pyautogui.click() works however the cursor / mouse pointer will need to be moved to position
+# ----- pyautogui.rightClick() and the pointer can be just about anywhere, sending F12 would be better
+# ----- pyautogui.press('f12') works
+
+sleep(5)
+pyautogui.press('f12')
+pyautogui.typewrite('j')
+pyautogui.typewrite('j')
+pyautogui.typewrite('j')
+pyautogui.typewrite('j')
+pyautogui.typewrite(path)
+pyautogui.typewrite('j')
+pyautogui.typewrite('j')
+pyautogui.typewrite('down')
+sleep(5)
+print("trying exit.jpg")
+pyautogui.click('exit.jpg')
+print("failed?")
 
 
 ########## Export the image
@@ -136,6 +163,18 @@ with open("C:\\briccs_ct\\results.csv", "ab") as f:
 # sleep(600) # 10 expect a ten minute download time.
 # find icon (done).Click
 ##########
+
+
+# END Start again with next in set!
+
+
+
+
+
+
+
+
+
 
 
 

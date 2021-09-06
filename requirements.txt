@@ -1,4 +1,3 @@
-pywin32
 selenium
 pyodbc
 pandas
