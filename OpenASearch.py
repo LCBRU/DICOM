@@ -17,6 +17,8 @@ from bs4 import BeautifulSoup
 import pyodbc
 import pandas as pd
 import os
+from os import listdir
+from os.path import isfile, join
 import subprocess
 from pywinauto import Desktop,Application
 from pathlib import Path
@@ -28,6 +30,7 @@ conn = pyodbc.connect('Driver={SQL Server};'
 
 ########################### Build list of (['UhlSystemNumber', 'MRN', 'BptNumber', 'RecruitingSite', 'ct_count','echo_count', 'DICOM_Images_Pseudonymised', 'ct_date_time_start'])
 ListToDicom = pd.read_sql_query('SELECT * FROM i2b2_app03_b1_data.dbo.DICOM_List', conn)
+#NEED TO REMOVE FROM THE TABLE ABOVE ALL THAT HAVE ALREADY BEEN DONE!!!
 print(ListToDicom.columns)
 print(ListToDicom.head(1))
 print('How may outstanting?')
@@ -129,6 +132,9 @@ if number_of_Dicoms_on_right_Date == 1:
     if not os.path.exists(path):
         os.makedirs(path)
     listTableForm = driver.find_element_by_name("listTableForm")
+    d_found_at = soup.find('td', string=re.compile(date_to_find))
+    # images_toProcess is reliant on the img column being two to the right of the date column, if it's not use settings
+    images_to_process = int(d_found_at.find_next_sibling().find_next_sibling().string)
     sleep(1)
     listTableForm.click()
 to_log = np.array(
@@ -167,10 +173,23 @@ pyautogui.typewrite(NextInList_bpt)
                             # option - anonymise should always be defult and checked
 pyautogui.press('tab')      # tab to the save button
 pyautogui.press('space')    # time to save the files!
-sleep(600)                  # take about ten minutes to save the stuff to C drive
+# take about ten minutes to save the stuff to C drive so wait at least 5 mins before starting to check
+sleep(300)
+
+images_to_do = images_to_process
+while images_to_do>1:
+    sleep(1)
+    number_of_dicoms_downloaded = len([f for f in listdir(path) if isfile(join(path, f))])
+    images_to_do = images_to_process - number_of_dicoms_downloaded
+    message = str(number_of_dicoms_downloaded)+' of '+str(images_to_process)+' downloaded, '+str(images_to_do)+' to do.'
+    print(message)
+    sleep(5)
+print("finished")
+
+
 
 #pyautogui.click('exit.jpg') # need to exit now, not sure how to....
-print("fin")
+
 
 # Root folder to be bptnumber
 # sleep(600) # 10 expect a ten minute download time.
