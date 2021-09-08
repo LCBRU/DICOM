@@ -31,6 +31,24 @@ conn = pyodbc.connect('Driver={SQL Server};'
 ########################### Build list of (['UhlSystemNumber', 'MRN', 'BptNumber', 'RecruitingSite', 'ct_count','echo_count', 'DICOM_Images_Pseudonymised', 'ct_date_time_start'])
 ListToDicom = pd.read_sql_query('SELECT * FROM i2b2_app03_b1_data.dbo.DICOM_List', conn)
 #NEED TO REMOVE FROM THE TABLE ABOVE ALL THAT HAVE ALREADY BEEN DONE!!!
+
+#df2 = pd.DataFrame(
+#   ...:     {
+#   ...:         "A": 1.0,
+#   ...:         "B": pd.Timestamp("20130102"),
+#   ...:         "C": pd.Series(1, index=list(range(4)), dtype="float32"),
+#   ...:         "D": np.array([3] * 4, dtype="int32"),
+#   ...:         "E": pd.Categorical(["test", "train", "test", "train"]),
+#   ...:         "F": "foo",
+#   ...:     }
+#   ...: )
+
+df = pd.read_csv ("C:\\briccs_ct\\results.csv",usecols=['BPT','date_time_finished'])
+#print(df["date_time_finished"] = True)
+
+with open("C:\\briccs_ct\\results.csv", "ab") as f:
+    np.savetxt(f, (to_log), fmt='%s', delimiter=' ')
+
 print(ListToDicom.columns)
 print(ListToDicom.head(1))
 print('How may outstanting?')
@@ -172,7 +190,9 @@ pyautogui.press('tab')      # select File Name Header and type bpt number in
 pyautogui.typewrite(NextInList_bpt)
                             # option - anonymise should always be defult and checked
 pyautogui.press('tab')      # tab to the save button
+starting_download = datetime.now()
 pyautogui.press('space')    # time to save the files!
+
 # take about ten minutes to save the stuff to C drive so wait at least 5 mins before starting to check
 sleep(300)
 
@@ -183,8 +203,13 @@ while images_to_do>1:
     images_to_do = images_to_process - number_of_dicoms_downloaded
     message = str(number_of_dicoms_downloaded)+' of '+str(images_to_process)+' downloaded, '+str(images_to_do)+' to do.'
     print(message)
+    print('Time now:', str(datetime.now()))
     sleep(5)
-print("finished")
+finished_downloading = datetime.now()
+download_took = finished_downloading - starting_download
+
+print(NextInList_bpt + " finished! Time taken(h:mm:ss.ms):", download_took)
+
 
 
 
