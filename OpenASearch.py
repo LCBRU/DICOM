@@ -30,7 +30,7 @@ conn = pyodbc.connect('Driver={SQL Server};'
 
 ########################### Build list of (['UhlSystemNumber', 'MRN', 'BptNumber', 'RecruitingSite', 'ct_count','echo_count', 'DICOM_Images_Pseudonymised', 'ct_date_time_start'])
 ListToDicom = pd.read_sql_query('SELECT * FROM i2b2_app03_b1_data.dbo.DICOM_List', conn)
-#NEED TO REMOVE FROM THE TABLE ABOVE ALL THAT HAVE ALREADY BEEN DONE!!!
+#Need to remove from the table above all that have ALREADY BEEN DONE!!!
 
 #df2 = pd.DataFrame(
 #   ...:     {
@@ -43,8 +43,11 @@ ListToDicom = pd.read_sql_query('SELECT * FROM i2b2_app03_b1_data.dbo.DICOM_List
 #   ...:     }
 #   ...: )
 
-df = pd.read_csv ("C:\\briccs_ct\\results.csv",usecols=['BPT','date_time_finished'])
-#print(df["date_time_finished"] = True)
+df = pd.read_csv('C:\\briccs_ct\\results.csv', parse_dates = ['date_time_finished','date_time_opened'])
+completed = df[df.date_time_finished.notnull()]
+list_minus_completed = pd.merge(ListToDicom, completed,how="left", on=["BptNumber"])
+
+#result = pd.merge(left, right, on="key")
 
 with open("C:\\briccs_ct\\results.csv", "ab") as f:
     np.savetxt(f, (to_log), fmt='%s', delimiter=' ')
@@ -52,6 +55,7 @@ with open("C:\\briccs_ct\\results.csv", "ab") as f:
 print(ListToDicom.columns)
 print(ListToDicom.head(1))
 print('How may outstanting?')
+#list_minus_completed.date_time_finished.isnull()
 print(ListToDicom.index.max())
 
 # select the search button
