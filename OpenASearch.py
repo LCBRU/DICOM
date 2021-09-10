@@ -83,7 +83,7 @@ print(PacsWindow)
 ################ start iterations
 finish_Line = list_to_dicom.index.max()
 print(finish_Line)
-i = 0
+i = 1
 while i < finish_Line:
     print("hi starting "+ str(i))
     NextInList = list_to_dicom.at[i, 'MRN']
