@@ -19,6 +19,9 @@ import pandas as pd
 import os
 from os import listdir
 from os.path import isfile, join
+pd.set_option("display.max_columns", None)
+pd.set_option("expand_frame_repr", True)
+
 import subprocess
 from pywinauto import Desktop, Application
 from pathlib import Path
@@ -82,7 +85,6 @@ finish_Line = list_to_dicom.index.max()
 print(finish_Line)
 i = 0
 while i < finish_Line:
-    i = i + 1
     print("hi starting "+ str(i))
     NextInList = list_to_dicom.at[i, 'MRN']
     # NextInList = 'RWES0112807'   ############################HARD CODED FOR TESTING, REMOVE TO GO LIVE
@@ -125,7 +127,10 @@ while i < finish_Line:
     driver.switch_to.window(PacsWindow[0])
     driver.switch_to.frame("tableFrame")
     soup = BeautifulSoup(driver.page_source, 'lxml')
+    print('looking for date match')
+    print(date_to_find)
     pprint(soup.find('td', string=re.compile(date_to_find)))
+    print('looking for date match end')
     number_of_Dicoms_on_right_Date = len(soup.find_all('td', string=re.compile(date_to_find)))
     print('number of Dicoms on date of intrest')
     print(number_of_Dicoms_on_right_Date)
@@ -190,6 +195,7 @@ while i < finish_Line:
         # take about ten minutes to save the stuff to C drive so wait at least 5 mins before starting to check
         sleep(10)  # 300 when go live
         images_to_do = images_to_process
+        # keep checking for finished!
         while images_to_do > 1:
             sleep(1)
             number_of_dicoms_downloaded = len([f for f in listdir(path) if isfile(join(path, f))])
@@ -206,6 +212,7 @@ while i < finish_Line:
         print(to_log)
         with open("C:\\briccs_ct\\results.csv", "ab") as f:
             np.savetxt(f, (to_log), fmt='%s', delimiter=' ')
+
         download_took = finished_downloading - starting_download
         pyautogui.keydown('alt')
         pyautogui.press('f4')
@@ -213,8 +220,8 @@ while i < finish_Line:
         sleep(.1)
         pyautogui.press('return')
         print(NextInList_bpt + " finished! Time taken(h:mm:ss.ms):", download_took)
-
-print('Finished First Pass of all of them')
+    i = i + 1
+    print('Finished First Pass of all of them')
 ############################## reiterate now
 
 
