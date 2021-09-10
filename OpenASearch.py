@@ -29,34 +29,21 @@ conn = pyodbc.connect('Driver={SQL Server};'
                       'Trusted_Connection=yes;')
 
 ########################### Build list of (['UhlSystemNumber', 'MRN', 'BptNumber', 'RecruitingSite', 'ct_count','echo_count', 'DICOM_Images_Pseudonymised', 'ct_date_time_start'])
-ListToDicom = pd.read_sql_query('SELECT * FROM i2b2_app03_b1_data.dbo.DICOM_List', conn)
+sql_list_to_dicom = pd.read_sql_query('SELECT * FROM i2b2_app03_b1_data.dbo.DICOM_List', conn)
 #Need to remove from the table above all that have ALREADY BEEN DONE!!!
-
-#df2 = pd.DataFrame(
-#   ...:     {
-#   ...:         "A": 1.0,
-#   ...:         "B": pd.Timestamp("20130102"),
-#   ...:         "C": pd.Series(1, index=list(range(4)), dtype="float32"),
-#   ...:         "D": np.array([3] * 4, dtype="int32"),
-#   ...:         "E": pd.Categorical(["test", "train", "test", "train"]),
-#   ...:         "F": "foo",
-#   ...:     }
-#   ...: )
 
 df = pd.read_csv('C:\\briccs_ct\\results.csv', parse_dates = ['date_time_finished','date_time_opened'])
 completed = df[df.date_time_finished.notnull()]
-list_minus_completed = pd.merge(ListToDicom, completed,how="left", on=["BptNumber"])
 
-#result = pd.merge(left, right, on="key")
+# list of all that have been done:
+list_plus_completed_detail = pd.merge(sql_list_to_dicom, completed,how="left", on=["BptNumber"])
+# new list without the completed participants in
+list_to_dicom = list_plus_completed_detail[list_plus_completed_detail['date_time_finished'].isnull()]
 
-with open("C:\\briccs_ct\\results.csv", "ab") as f:
-    np.savetxt(f, (to_log), fmt='%s', delimiter=' ')
-
-print(ListToDicom.columns)
-print(ListToDicom.head(1))
+print(list_to_dicom.columns)
+print(list_to_dicom.head(1))
 print('How may outstanting?')
-#list_minus_completed.date_time_finished.isnull()
-print(ListToDicom.index.max())
+print(list_to_dicom.index.max())
 
 # select the search button
 driver = webdriver.Ie()
@@ -71,8 +58,6 @@ f = open("G:\dicom\.env", "r")
 myid = f.readline().splitlines()
 mypass = f.readline()
 f.close()
-myid
-mypass
 
 sleep(1)
 username = driver.find_element_by_id("userName")
@@ -89,13 +74,13 @@ PacsWindow = driver.window_handles
 print(PacsWindow)
 
 ################ start iterations
-i = 9
-NextInList = ListToDicom.at[i, 'MRN']
+i = 0
+NextInList = list_to_dicom.at[i, 'MRN']
 # NextInList = 'RWES0112807'   ############################HARD CODED FOR TESTING, REMOVE TO GO LIVE
-NextInList_bpt = ListToDicom.at[i, 'BptNumber']
+NextInList_bpt = list_to_dicom.at[i, 'BptNumber']
 
 date_to_find = datetime.utcfromtimestamp(
-    ListToDicom['ct_date_time_start'].values[i].astype(datetime) / 1_000_000_000).strftime('%m-%d-%Y')
+    list_to_dicom['ct_date_time_start'].values[i].astype(datetime) / 1_000_000_000).strftime('%m-%d-%Y')
 print(NextInList)
 print(date_to_find)
 
@@ -169,36 +154,45 @@ with open("C:\\briccs_ct\\results.csv", "ab") as f:
 # ----- pyautogui.rightClick() and the pointer can be just about anywhere, sending F12 would be better
 # ----- pyautogui.press('f12') works
 
-cmd = 'WMIC PROCESS get Caption,Commandline,Processid'
-proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
-for line in proc.stdout:
-    print(line)
+
 
 
 ########## Export the image
 sleep(5)  # page loading
 pyautogui.press('f12')      # opens the save images windows, focused on save button by default
+sleep(2)
 pyautogui.typewrite('d')    # set file type to DICOM(*.dcm)
+sleep(1)
 pyautogui.press('tab')      # tab over to folder
+sleep(.1)
 pyautogui.press('tab')
+sleep(.1)
 pyautogui.press('tab')
+sleep(.1)
 pyautogui.press('tab')
+sleep(.1)
 pyautogui.typewrite(path)   # set to predefined path
+sleep(1)
 pyautogui.press('tab')      # tab apply to images
-pyautogui.press('tab')
-pyautogui.press('down') # select the non-default save 'Entire Study' (two down from default)
+sleep(.1)
 pyautogui.press('down')
-pyautogui.press('tab')      # tab to do not create subfolder
-pyautogui.press('space')           # click not create subfolder
-pyautogui.press('tab')      # select File Name Header and type bpt number in
+sleep(.1) # select the non-default save 'Entire Study' (two down from default)
+pyautogui.press('down')
+sleep(.1)
+pyautogui.press('tab')
+sleep(.1)
+pyautogui.press('tab')      # should save you're last settings so shouldn't need to check not create subfolder
+#sleep(.1)
+#pyautogui.press('space')           # click not create subfolder      # select File Name Header and type bpt number in
+sleep(1)
 pyautogui.typewrite(NextInList_bpt)
                             # option - anonymise should always be defult and checked
 pyautogui.press('tab')      # tab to the save button
 starting_download = datetime.now()
-pyautogui.press('space')    # time to save the files!
+pyautogui.press('return')    # time to save the files!
 
 # take about ten minutes to save the stuff to C drive so wait at least 5 mins before starting to check
-sleep(300)
+sleep(10) #300 when go live
 
 images_to_do = images_to_process
 while images_to_do>1:
@@ -214,7 +208,9 @@ download_took = finished_downloading - starting_download
 
 print(NextInList_bpt + " finished! Time taken(h:mm:ss.ms):", download_took)
 
+# Now click Done button or exit
 
+############################## reiterate now
 
 
 #pyautogui.click('exit.jpg') # need to exit now, not sure how to....
@@ -282,3 +278,7 @@ print(NextInList_bpt + " finished! Time taken(h:mm:ss.ms):", download_took)
 # find_the_dates = soup.find_all('td', style = "WORD-WRAP: break-word", align = 'right')
 # pprint(find_the_first_date)
 # pprint(find_the_dates)
+#cmd = 'WMIC PROCESS get Caption,Commandline,Processid'
+#proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+#for line in proc.stdout:
+#    print(line)
