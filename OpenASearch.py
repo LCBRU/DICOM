@@ -215,7 +215,7 @@ while i < finish_Line:
                 images_to_do) + ' to do.'
             print(message)
             print('Time now:', str(datetime.now()))
-            sleep(5)
+            sleep(60)
         finished_downloading = datetime.now()
         to_log = np.array(
             [NextInList + ',' + NextInList_bpt + ',' + str(number_of_Dicoms_on_right_Date) + ',' +
