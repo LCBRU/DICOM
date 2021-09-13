@@ -77,13 +77,13 @@ login = driver.find_element_by_name("login")
 login.click()
 # end of LogMeIn
 
-PacsWindow = driver.window_handles
-print(PacsWindow)
+pacsWindow = driver.window_handles
+print(pacsWindow)
 
 ################ start iterations
 finish_Line = list_to_dicom.index.max()
 print(finish_Line)
-i = 1
+i = 0
 while i < finish_Line:
     print("hi starting "+ str(i))
     NextInList = list_to_dicom.at[i, 'MRN']
@@ -93,18 +93,19 @@ while i < finish_Line:
         list_to_dicom['ct_date_time_start'].values[i].astype(datetime) / 1_000_000_000).strftime('%m-%d-%Y')
     print(NextInList)
     print(date_to_find)
+    print(NextInList_bpt)
     # open advanced search and find its handle and switch to window
-    PacsWindow = driver.window_handles
-    print(PacsWindow)
+    pacsWindow = driver.window_handles
+    print(pacsWindow)
     driver.current_url
-    driver.switch_to.window(PacsWindow[0])
+    driver.switch_to.window(pacsWindow[0])
     driver.current_url
     driver.execute_script("openSearch(false);")
     sleep(1)
-    advsearchwindow = list(set(driver.window_handles) - set(PacsWindow))[0]
+    advsearchwindow = list(set(driver.window_handles) - set(pacsWindow))[0]
     driver.window_handles
     print(advsearchwindow)
-    print(PacsWindow)
+    print(pacsWindow)
     driver.switch_to.window(
         advsearchwindow)  # driver.switch_to.window(PacsWindow) #driver.switch_to.window(advsearchwindow)
     driver.switch_to.frame("LIST")
@@ -121,14 +122,15 @@ while i < finish_Line:
     butts[0].click()
     sleep(3)
     # driver.window_handles by monitoring the window_handles it seems to close the connection!!!!!!!!!!
-    print(PacsWindow)
+    print(pacsWindow)
     print(driver.window_handles)
     print("switching...PacsWindow")
-    driver.switch_to.window(PacsWindow[0])
+    driver.switch_to.window(pacsWindow[0])
     driver.switch_to.frame("tableFrame")
     soup = BeautifulSoup(driver.page_source, 'lxml')
     print('looking for date match')
     print(date_to_find)
+    list_to_dicom.head(2)
     pprint(soup.find('td', string=re.compile(date_to_find)))
     print('looking for date match end')
     number_of_Dicoms_on_right_Date = len(soup.find_all('td', string=re.compile(date_to_find)))
@@ -208,7 +210,7 @@ while i < finish_Line:
         finished_downloading = datetime.now()
         to_log = np.array(
             [NextInList + ',' + NextInList_bpt + ',' + str(number_of_Dicoms_on_right_Date) + ',' +
-                starting_download + ',' + str(datetime.now()) + ',' ])
+                str(starting_download) + ',' + str(datetime.now()) + ','])
         print(to_log)
         with open("C:\\briccs_ct\\results.csv", "ab") as f:
             np.savetxt(f, (to_log), fmt='%s', delimiter=' ')
