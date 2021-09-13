@@ -225,7 +225,7 @@ while i < finish_Line:
             np.savetxt(f, (to_log), fmt='%s', delimiter=' ')
 
         download_took = finished_downloading - starting_download
-        pyautogui.keydown('alt')
+        pyautogui.keyDown('alt')
         pyautogui.press('f4')
         pyautogui.keyUp('alt')
         sleep(.1)
