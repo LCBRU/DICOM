@@ -43,12 +43,14 @@ list_plus_completed_detail = pd.merge(sql_list_to_dicom, completed, how="left", 
 # new list without the completed participants in
 less_Done = list_plus_completed_detail[list_plus_completed_detail['date_time_finished'].isnull()]
 
-list_to_dicom = less_Done[less_Done['number_of_Dicoms_on_right_Date'].isnull()]
 # also need to bemove number_of_Dicoms_on_right_Date<>1
+list_to_dicom = less_Done[less_Done['number_of_Dicoms_on_right_Date'].isnull()]
 
+# Resetting the index as some have now been removed which would mess with the iteration loop
+list_to_dicom.reset_index(inplace = True, drop = True)
 
 print(list_to_dicom.columns)
-print(list_to_dicom.head(1))
+print(list_to_dicom.head(7))
 print('How may outstanting?')
 print(list_to_dicom.index.max())
 
@@ -86,14 +88,21 @@ print(finish_Line)
 i = 0
 while i < finish_Line:
     print("hi starting "+ str(i))
+    NextInList = ""
+    NextInList_bpt = ""
+    date_to_find = ""
+    print("variables made")
     NextInList = list_to_dicom.at[i, 'MRN']
+    print("NextInList made")
     # NextInList = 'RWES0112807'   ############################HARD CODED FOR TESTING, REMOVE TO GO LIVE
     NextInList_bpt = list_to_dicom.at[i, 'BptNumber']
+    print("NextInList_bpt made")
     date_to_find = datetime.utcfromtimestamp(
         list_to_dicom['ct_date_time_start'].values[i].astype(datetime) / 1_000_000_000).strftime('%m-%d-%Y')
+    print("date_to_find made")
     print(NextInList)
-    print(date_to_find)
     print(NextInList_bpt)
+    print(date_to_find)
     # open advanced search and find its handle and switch to window
     pacsWindow = driver.window_handles
     print(pacsWindow)
@@ -223,7 +232,7 @@ while i < finish_Line:
         pyautogui.press('return')
         print(NextInList_bpt + " finished! Time taken(h:mm:ss.ms):", download_took)
     i = i + 1
-    print('Finished First Pass of all of them')
+print('Finished First Pass of all of them')
 ############################## reiterate now
 
 
