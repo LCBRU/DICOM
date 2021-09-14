@@ -223,7 +223,6 @@ while i < finish_Line:
         print(to_log)
         with open("C:\\briccs_ct\\results.csv", "ab") as f:
             np.savetxt(f, (to_log), fmt='%s', delimiter=' ')
-
         download_took = finished_downloading - starting_download
         pyautogui.keyDown('alt')
         pyautogui.press('f4')
