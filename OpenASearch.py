@@ -15,12 +15,14 @@ import unittest
 import numpy as np
 from bs4 import BeautifulSoup
 import pyodbc
+import csv
 import pandas as pd
 import os
 from os import listdir
 from os.path import isfile, join
 pd.set_option("display.max_columns", None)
 pd.set_option("expand_frame_repr", True)
+pd.set_option("display.width", 220)
 
 import subprocess
 from pywinauto import Desktop, Application
@@ -35,16 +37,30 @@ conn = pyodbc.connect('Driver={SQL Server};'
 sql_list_to_dicom = pd.read_sql_query('SELECT * FROM i2b2_app03_b1_data.dbo.DICOM_List', conn)
 # Need to remove from the table above all that have ALREADY BEEN DONE!!!
 
-df = pd.read_csv('C:\\briccs_ct\\results.csv', parse_dates=['date_time_finished', 'date_time_opened'])
-completed = df[df.date_time_finished.notnull()]
+#df = pd.read_csv('C:\\briccs_ct\\results.csv', parse_dates=['date_time_finished', 'date_time_opened'])
+#header_fields = ['RWES','BptNumber','number_of_Dicoms_on_right_Date','date_time_opened','date_time_finished','time_taken']
+df = pd.read_csv('C:\\briccs_ct\\results.csv',
+                 #names = hearer_fields,skiprows= 0,
 
+                 parse_dates=['date_time_finished','date_time_opened'],
+                 dtype={'RWES':str,
+                        'BptNumber':str,
+                        'number_of_Dicoms_on_right_Date': int
+                        })
+
+sql_list_to_dicom.shape
 # list of all that have been done:
-list_plus_completed_detail = pd.merge(sql_list_to_dicom, completed, how="left", on=["BptNumber"])
-# new list without the completed participants in
-less_Done = list_plus_completed_detail[list_plus_completed_detail['date_time_finished'].isnull()]
+list_plus_completed_detail = pd.merge(sql_list_to_dicom, df, how="left", on=["BptNumber"])
+list_plus_completed_detail.shape
+#drop where none on the right date is found
+list_plus_completed_detail = list_plus_completed_detail.drop(list_plus_completed_detail[list_plus_completed_detail.number_of_Dicoms_on_right_Date ==0].index)
+list_plus_completed_detail.shape
+# drop the completed participants
+list_plus_completed_detail = list_plus_completed_detail[list_plus_completed_detail['date_time_finished'].isnull()]
+list_plus_completed_detail.shape
 
-# also need to bemove number_of_Dicoms_on_right_Date<>1
-list_to_dicom = less_Done[less_Done['number_of_Dicoms_on_right_Date'].isnull()]
+#final list
+list_to_dicom = list_plus_completed_detail
 
 # Resetting the index as some have now been removed which would mess with the iteration loop
 list_to_dicom.reset_index(inplace = True, drop = True)
@@ -100,9 +116,11 @@ while i < finish_Line:
     date_to_find = datetime.utcfromtimestamp(
         list_to_dicom['ct_date_time_start'].values[i].astype(datetime) / 1_000_000_000).strftime('%m-%d-%Y')
     print("date_to_find made")
+    #Previuos_number_of_Dicoms_on_right_Date = list_to_dicom.at[i, 'number_of_Dicoms_on_right_Date']
     print(NextInList)
     print(NextInList_bpt)
     print(date_to_find)
+    #print(Previuos_number_of_Dicoms_on_right_Date)
     # open advanced search and find its handle and switch to window
     pacsWindow = driver.window_handles
     print(pacsWindow)
