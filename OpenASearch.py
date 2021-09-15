@@ -99,6 +99,8 @@ pacsWindow = driver.window_handles
 print(pacsWindow)
 
 ################ start iterations
+pyautogui.FAILSAFE=False
+
 finish_Line = list_to_dicom.index.max()
 print(finish_Line)
 i = 0
