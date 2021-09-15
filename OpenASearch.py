@@ -20,9 +20,14 @@ import pandas as pd
 import os
 from os import listdir
 from os.path import isfile, join
+from wakepy import set_keepawake, unset_keepawake
+
+set_keepawake(keep_screen_awake=False)
+
 pd.set_option("display.max_columns", None)
 pd.set_option("expand_frame_repr", True)
 pd.set_option("display.width", 220)
+
 
 import subprocess
 from pywinauto import Desktop, Application
@@ -228,14 +233,17 @@ while i < finish_Line:
         images_to_do = images_to_process
         # keep checking for finished!
         while images_to_do > 1:
-            sleep(1)
             number_of_dicoms_downloaded = len([f for f in listdir(path) if isfile(join(path, f))])
             images_to_do = images_to_process - number_of_dicoms_downloaded
             message = str(number_of_dicoms_downloaded) + ' of ' + str(images_to_process) + ' downloaded, ' + str(
                 images_to_do) + ' to do.'
             print(message)
             print('Time now:', str(datetime.now()))
-            sleep(60)
+            # for setting sleep, it takes about .7 seconds per file, this means we've check just before the extract is
+            # due to finish, this prevents output going overboard. + 2 to ensure near completion it's not logging many
+            # near the end.
+            sleep(images_to_do * .65)
+            sleep(2)
         finished_downloading = datetime.now()
         to_log = np.array(
             [NextInList + ',' + NextInList_bpt + ',' + str(number_of_Dicoms_on_right_Date) + ',' +
