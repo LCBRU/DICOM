@@ -254,10 +254,11 @@ while i < finish_Line:
                 sleep(1)
                 pyautogui.press('volumeup')
                 sleep(1)
+                pyautogui.typewrite('iiiiiiiiiiiiiiii')
                 #pyautogui.moveRel(xOffset, yOffset, duration=num_seconds)
-                pyautogui.moveRel(1, 1, duration=.5)
-                pyautogui.moveRel(-1, -1, duration=.5)
-                timer = timer-60
+                pyautogui.moveRel(20, 0, duration=2)
+                pyautogui.moveRel(-20, 0, duration=2)
+                timer = max(timer-60, 1)
             sleep(timer)
         finished_downloading = datetime.now()
         to_log = np.array(
