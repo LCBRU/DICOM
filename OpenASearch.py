@@ -21,6 +21,9 @@ import os
 from os import listdir
 from os.path import isfile, join
 from wakepy import set_keepawake, unset_keepawake
+import ctypes
+# attempt to prevent screen lock
+ctypes.windll.kernel32.SetThreadExecutionState(0x80000002)
 
 set_keepawake(keep_screen_awake=False)
 
@@ -251,6 +254,8 @@ while i < finish_Line:
                 sleep(1)
                 pyautogui.press('volumeup')
                 sleep(1)
+                pyautogui.moveRel(1)
+                pyautogui.moveRel(-1)
                 timer = timer-60
             sleep(timer)
         finished_downloading = datetime.now()
