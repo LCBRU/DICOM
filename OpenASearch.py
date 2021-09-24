@@ -44,7 +44,7 @@ sql_list_to_dicom = pd.read_sql_query('SELECT * FROM i2b2_app03_b1_data.dbo.DICO
 
 #df = pd.read_csv('C:\\briccs_ct\\results.csv', parse_dates=['date_time_finished', 'date_time_opened'])
 #header_fields = ['RWES','BptNumber','number_of_Dicoms_on_right_Date','date_time_opened','date_time_finished','time_taken']
-df = pd.read_csv('C:\\briccs_ct\\results.csv',
+df = pd.read_csv('\\\\4CE9371LGG\\briccs_ct\\results.csv',
                  #names = hearer_fields,skiprows= 0,
 
                  parse_dates=['date_time_finished','date_time_opened'],
@@ -242,7 +242,16 @@ while i < finish_Line:
             # for setting sleep, it takes about .7 seconds per file, this means we've check just before the extract is
             # due to finish, this prevents output going overboard. + 2 to ensure near completion it's not logging many
             # near the end.
-            sleep(images_to_do * .65)
+            timer = images_to_do * .65
+            # The next while loop should stop the screen from locking (which messes up the program) by
+            # keyboard interaction every minute, until it's next time to check .
+            while timer >0
+                sleep(58)
+                pyautogui.press('volumedown')
+                sleep(1)
+                pyautogui.press('volumeup')
+                sleep(1)
+                timer = timer-60
             sleep(2)
         finished_downloading = datetime.now()
         to_log = np.array(
