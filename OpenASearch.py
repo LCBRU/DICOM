@@ -245,14 +245,14 @@ while i < finish_Line:
             timer = images_to_do * .65
             # The next while loop should stop the screen from locking (which messes up the program) by
             # keyboard interaction every minute, until it's next time to check .
-            while timer >0
+            while timer > 60:
                 sleep(58)
                 pyautogui.press('volumedown')
                 sleep(1)
                 pyautogui.press('volumeup')
                 sleep(1)
                 timer = timer-60
-            sleep(2)
+            sleep(timer)
         finished_downloading = datetime.now()
         to_log = np.array(
             [NextInList + ',' + NextInList_bpt + ',' + str(number_of_Dicoms_on_right_Date) + ',' +
