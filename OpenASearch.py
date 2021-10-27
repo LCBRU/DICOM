@@ -249,16 +249,18 @@ while i < finish_Line:
             # The next while loop should stop the screen from locking (which messes up the program) by
             # keyboard interaction every minute, until it's next time to check .
             while timer > 60:
-                sleep(58)
-                pyautogui.press('volumedown')
                 sleep(1)
-                pyautogui.press('volumeup')
-                sleep(1)
-                pyautogui.typewrite('iiiiiiiiiiiiiiii')
-                #pyautogui.moveRel(xOffset, yOffset, duration=num_seconds)
-                pyautogui.moveRel(20, 0, duration=2)
-                pyautogui.moveRel(-20, 0, duration=2)
-                timer = max(timer-60, 1)
+                # The below wasn't preventing the screen lock kicking in so has been commented out.
+                # sleep(58)
+                # pyautogui.press('volumedown')
+                # sleep(1)
+                # pyautogui.press('volumeup')
+                # sleep(1)
+                # #pyautogui.typewrite('')
+                # #pyautogui.moveRel(xOffset, yOffset, duration=num_seconds)
+                # pyautogui.moveRel(20, 0, duration=2)
+                # pyautogui.moveRel(-20, 0, duration=2)
+                # timer = max(timer-60, 1)
             sleep(timer)
         finished_downloading = datetime.now()
         to_log = np.array(
