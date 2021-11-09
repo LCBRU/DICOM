@@ -7,4 +7,4 @@ lxml
 requests
 pywinauto
 pyautogui
-shutil
+psutil

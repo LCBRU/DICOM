@@ -19,11 +19,19 @@ import csv
 import pandas as pd
 import os
 from os import listdir
-from shutil import disk_usage
+import psutil
+from psutil import disk_usage
 from os.path import isfile, join
 from wakepy import set_keepawake, unset_keepawake
 import ctypes
 # attempt to prevent screen lock
+
+#quick check on disk space
+
+free_space = round(psutil.disk_usage(".").free / 1000000000, 1)
+print('free space on storage drive:', free_space, ' GB')
+
+
 ctypes.windll.kernel32.SetThreadExecutionState(0x80000002)
 
 set_keepawake(keep_screen_awake=False)
@@ -110,10 +118,11 @@ print(pacsWindow)
 ################ start iterations
 pyautogui.FAILSAFE=False
 
+
 finish_Line = list_to_dicom.index.max()
 print(finish_Line)
 i = 0
-while i < finish_Line:
+while i < finish_Line and free_space > 3:
     print("hi starting "+ str(i))
     NextInList = ""
     NextInList_bpt = ""
@@ -290,12 +299,8 @@ while i < finish_Line:
         print(NextInList_bpt + " finished! Time taken(h:mm:ss.ms):", download_took)
     i = i + 1
 
-    total_bytes, used_bytes, free_bytes = disk_usage(path.realpath('C:\\briccs_ct'))
-
-    print(total_bytes / 1000000000)  # for gb (ish)
-    print(used_bytes  / 1000000000)
-    print(free_bytes  / 1000000000)
-
+    free_space = round(psutil.disk_usage(".").free / 1000000000, 1)
+    print('free space on storage drive:',free_space, ' GB')
 
 print('Finished First Pass of all of them')
 ############################## reiterate now
