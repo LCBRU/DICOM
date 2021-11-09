@@ -19,6 +19,7 @@ import csv
 import pandas as pd
 import os
 from os import listdir
+from shutil import disk_usage
 from os.path import isfile, join
 from wakepy import set_keepawake, unset_keepawake
 import ctypes
@@ -246,7 +247,7 @@ while i < finish_Line:
             # for setting sleep, it takes about .7 seconds per file, this means we've check just before the extract is
             # due to finish, this prevents output going overboard. + 2 to ensure near completion it's not logging many
             # near the end.
-            timer = round(images_to_do * .69, 0)
+            timer = round(images_to_do * .7, 0)
 
             print('Timer set to:', str(timer))
             # The next while loop should stop the screen from locking (which messes up the program) by
@@ -288,6 +289,14 @@ while i < finish_Line:
         sleep(1)
         print(NextInList_bpt + " finished! Time taken(h:mm:ss.ms):", download_took)
     i = i + 1
+
+    total_bytes, used_bytes, free_bytes = disk_usage(path.realpath('C:\\briccs_ct'))
+
+    print(total_bytes / 1000000000)  # for gb (ish)
+    print(used_bytes  / 1000000000)
+    print(free_bytes  / 1000000000)
+
+
 print('Finished First Pass of all of them')
 ############################## reiterate now
 
