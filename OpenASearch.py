@@ -237,7 +237,8 @@ while i < finish_Line:
         # keep checking for finished!
         while images_to_do > 1:
             number_of_dicoms_downloaded = len([f for f in listdir(path) if isfile(join(path, f))])
-            images_to_do = images_to_process - number_of_dicoms_downloaded
+            # occasionally an extra file is found and downloaded hence the need to prevent a negative number.
+            images_to_do = max(images_to_process - number_of_dicoms_downloaded, 0)
             message = str(number_of_dicoms_downloaded) + ' of ' + str(images_to_process) + ' downloaded, ' + str(
                 images_to_do) + ' to do.'
             print(message)
@@ -245,23 +246,31 @@ while i < finish_Line:
             # for setting sleep, it takes about .7 seconds per file, this means we've check just before the extract is
             # due to finish, this prevents output going overboard. + 2 to ensure near completion it's not logging many
             # near the end.
-            timer = images_to_do * .65
+            timer = round(images_to_do * .69, 0)
+
+            print('Timer set to:', str(timer))
             # The next while loop should stop the screen from locking (which messes up the program) by
             # keyboard interaction every minute, until it's next time to check .
             while timer > 60:
-                sleep(1)
+                #sleep(1)
                 # The below wasn't preventing the screen lock kicking in so has been commented out.
-                # sleep(58)
-                # pyautogui.press('volumedown')
-                # sleep(1)
-                # pyautogui.press('volumeup')
-                # sleep(1)
+                print('Timer set to:', str(timer), ' ...sleeping for a min')
+                sleep(60)
+                #pyautogui.press('volumedown')
+                #sleep(.5)
+                #pyautogui.press('volumeup')
+                #sleep(.5)
+                ES_CONTINUOUS = 0x80000000
+                ES_SYSTEM_REQUIRED = 0x00000001
+                ES_DISPLAY_REQUIRED = 0x00000002
+                #ES_AWAYMODE_REQUIRED = 0x00000040
                 # #pyautogui.typewrite('')
-                # #pyautogui.moveRel(xOffset, yOffset, duration=num_seconds)
-                # pyautogui.moveRel(20, 0, duration=2)
-                # pyautogui.moveRel(-20, 0, duration=2)
-                # timer = max(timer-60, 1)
+                ##pyautogui.moveRel(xOffset, yOffset, duration=num_seconds)
+                #pyautogui.moveRel(20, 30, duration=.5)
+                #pyautogui.moveRel(-20, -30, duration=.5)
+                timer = max(timer-60, 1)
             sleep(timer)
+            print('Timer set to:', str(timer), ' ...finished sleep.')
         finished_downloading = datetime.now()
         to_log = np.array(
             [NextInList + ',' + NextInList_bpt + ',' + str(number_of_Dicoms_on_right_Date) + ',' +
@@ -270,11 +279,13 @@ while i < finish_Line:
         with open("C:\\briccs_ct\\results.csv", "ab") as f:
             np.savetxt(f, (to_log), fmt='%s', delimiter=' ')
         download_took = finished_downloading - starting_download
+        sleep(2)
         pyautogui.keyDown('alt')
         pyautogui.press('f4')
         pyautogui.keyUp('alt')
-        sleep(.1)
+        sleep(1)
         pyautogui.press('return')
+        sleep(1)
         print(NextInList_bpt + " finished! Time taken(h:mm:ss.ms):", download_took)
     i = i + 1
 print('Finished First Pass of all of them')
