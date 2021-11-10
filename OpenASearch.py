@@ -1,21 +1,12 @@
 import pyautogui
 import requests, re
-# import httplib2
-# import urllib
-# import scrapy
 from time import sleep
 from datetime import *
 from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.action_chains import ActionChains
 from pprint import pprint
-import unittest
 import numpy as np
 from bs4 import BeautifulSoup
 import pyodbc
-import csv
 import pandas as pd
 import os
 from os import listdir
@@ -24,123 +15,118 @@ from psutil import disk_usage
 from os.path import isfile, join
 from wakepy import set_keepawake, unset_keepawake
 import ctypes
-# attempt to prevent screen lock
 
-#quick check on disk space
+# vars
+free_space_limit = 2
+storage_location = "U:\\Dicom\\"
 
-free_space = round(psutil.disk_usage(".").free / 1000000000, 1)
-print('free space on storage drive:', free_space, ' GB')
-
-
-ctypes.windll.kernel32.SetThreadExecutionState(0x80000002)
-
-set_keepawake(keep_screen_awake=False)
-
-pd.set_option("display.max_columns", None)
-pd.set_option("expand_frame_repr", True)
-pd.set_option("display.width", 220)
-
-
-import subprocess
-from pywinauto import Desktop, Application
-from pathlib import Path
-
+# SQL connection
 conn = pyodbc.connect('Driver={SQL Server};'
                       r'Server=UHLSQLPRIME01\UHLBRICCSDB;'
                       'Database=i2b2_app03_b1_data;'
                       'Trusted_Connection=yes;')
+# options
+pd.set_option("display.max_columns", None)
+pd.set_option("expand_frame_repr", True)
+pd.set_option("display.width", 220)
+pyautogui.FAILSAFE = False
 
-########################### Build list of (['UhlSystemNumber', 'MRN', 'BptNumber', 'RecruitingSite', 'ct_count','echo_count', 'DICOM_Images_Pseudonymised', 'ct_date_time_start'])
-sql_list_to_dicom = pd.read_sql_query('SELECT * FROM i2b2_app03_b1_data.dbo.DICOM_List', conn)
-# Need to remove from the table above all that have ALREADY BEEN DONE!!!
 
-#df = pd.read_csv('C:\\briccs_ct\\results.csv', parse_dates=['date_time_finished', 'date_time_opened'])
-#header_fields = ['RWES','BptNumber','number_of_Dicoms_on_right_Date','date_time_opened','date_time_finished','time_taken']
-df = pd.read_csv('\\\\4CE9371LGG\\briccs_ct\\results.csv',
-                 #names = hearer_fields,skiprows= 0,
+def storage_check():
+    global free_space
+    free_space = round(psutil.disk_usage(storage_location).free / 1000000000, 1)
+    print('free space on storage drive:', free_space, ' GB')
+    if free_space < free_space_limit:
+        raise Exception('insufficient storage')
 
-                 parse_dates=['date_time_finished','date_time_opened'],
-                 dtype={'RWES':str,
-                        'BptNumber':str,
-                        'number_of_Dicoms_on_right_Date': int
-                        })
+def build_lists_of_to_do():
+    global list_to_dicom
+    sql_list_to_dicom = pd.read_sql_query('SELECT * FROM i2b2_app03_b1_data.dbo.DICOM_List', conn)
+    df = pd.read_csv(storage_location + 'results.csv',
+                     parse_dates=['date_time_finished', 'date_time_opened'],
+                     dtype={'RWES': str,
+                            'BptNumber': str,
+                            'number_of_Dicoms_on_right_Date': int
+                            })
+    sql_list_to_dicom.shape
+    # list of all that have been done:
+    list_plus_completed_detail = pd.merge(sql_list_to_dicom, df, how="left", on=["BptNumber"])
+    list_plus_completed_detail.shape
+    # drop where none on the right date is found
+    list_plus_completed_detail = list_plus_completed_detail.drop(
+        list_plus_completed_detail[list_plus_completed_detail.number_of_Dicoms_on_right_Date == 0].index)
+    list_plus_completed_detail.shape
+    # drop the completed participants
+    list_plus_completed_detail = list_plus_completed_detail[list_plus_completed_detail['date_time_finished'].isnull()]
+    list_plus_completed_detail.shape
+    # final list
+    list_to_dicom = list_plus_completed_detail
+    # Resetting the index as some have now been removed which would mess with the iteration loop
+    list_to_dicom.reset_index(inplace=True, drop=True)
+    print(list_to_dicom.columns)
+    print(list_to_dicom.head(7))
+    print('How may outstanting?')
+    print(list_to_dicom.index.max())
 
-sql_list_to_dicom.shape
-# list of all that have been done:
-list_plus_completed_detail = pd.merge(sql_list_to_dicom, df, how="left", on=["BptNumber"])
-list_plus_completed_detail.shape
-#drop where none on the right date is found
-list_plus_completed_detail = list_plus_completed_detail.drop(list_plus_completed_detail[list_plus_completed_detail.number_of_Dicoms_on_right_Date ==0].index)
-list_plus_completed_detail.shape
-# drop the completed participants
-list_plus_completed_detail = list_plus_completed_detail[list_plus_completed_detail['date_time_finished'].isnull()]
-list_plus_completed_detail.shape
 
-#final list
-list_to_dicom = list_plus_completed_detail
 
-# Resetting the index as some have now been removed which would mess with the iteration loop
-list_to_dicom.reset_index(inplace = True, drop = True)
+def log_me_in():
+    global driver, f
+    driver = webdriver.Ie()
+    driver.implicitly_wait(3)
+    driver.get("https://uvweb.pacs.uhl-tr.nhs.uk/login.jsp")
+    driver.maximize_window()
+    f = open("G:\dicom\.env", "r")
+    myid = f.readline().splitlines()
+    mypass = f.readline()
+    f.close()
+    sleep(1)
+    username = driver.find_element_by_id("userName")
+    username.send_keys(myid)
+    sleep(1)
+    password = driver.find_element_by_id("password")
+    password.send_keys(mypass)
+    login = driver.find_element_by_name("login")
+    login.click()
 
-print(list_to_dicom.columns)
-print(list_to_dicom.head(7))
-print('How may outstanting?')
-print(list_to_dicom.index.max())
+def close_study():
+    sleep(2)
+    pyautogui.keyDown('alt')
+    pyautogui.press('f4')
+    pyautogui.keyUp('alt')
+    sleep(1)
+    pyautogui.press('return')
+    sleep(1)
 
-# select the search button
-driver = webdriver.Ie()
-driver.implicitly_wait(3)
-driver.get("https://uvweb.pacs.uhl-tr.nhs.uk/login.jsp")
-driver.maximize_window()
-
-# LogMeIn
-#  .env
-
-f = open("G:\dicom\.env", "r")
-myid = f.readline().splitlines()
-mypass = f.readline()
-f.close()
-
-sleep(1)
-username = driver.find_element_by_id("userName")
-username.send_keys(myid)
-sleep(1)
-password = driver.find_element_by_id("password")
-password.send_keys(mypass)
-
-login = driver.find_element_by_name("login")
-login.click()
-# end of LogMeIn
+storage_check()
+build_lists_of_to_do()
+log_me_in()
 
 pacsWindow = driver.window_handles
 print(pacsWindow)
 
 ################ start iterations
-pyautogui.FAILSAFE=False
 
-
-finish_Line = list_to_dicom.index.max()
-print(finish_Line)
+finish_line = list_to_dicom.index.max()
+print(finish_line)
 i = 0
-while i < finish_Line and free_space > 3:
-    print("hi starting "+ str(i))
+
+while i < finish_line and free_space >= free_space_limit:
+    print("starting loop " + str(i))
     NextInList = ""
     NextInList_bpt = ""
     date_to_find = ""
     print("variables made")
     NextInList = list_to_dicom.at[i, 'MRN']
     print("NextInList made")
-    # NextInList = 'RWES0112807'   ############################HARD CODED FOR TESTING, REMOVE TO GO LIVE
     NextInList_bpt = list_to_dicom.at[i, 'BptNumber']
     print("NextInList_bpt made")
     date_to_find = datetime.utcfromtimestamp(
         list_to_dicom['ct_date_time_start'].values[i].astype(datetime) / 1_000_000_000).strftime('%m-%d-%Y')
     print("date_to_find made")
-    #Previuos_number_of_Dicoms_on_right_Date = list_to_dicom.at[i, 'number_of_Dicoms_on_right_Date']
     print(NextInList)
     print(NextInList_bpt)
     print(date_to_find)
-    #print(Previuos_number_of_Dicoms_on_right_Date)
     # open advanced search and find its handle and switch to window
     pacsWindow = driver.window_handles
     print(pacsWindow)
@@ -181,20 +167,20 @@ while i < finish_Line and free_space > 3:
     pprint(soup.find('td', string=re.compile(date_to_find)))
     print('looking for date match end')
     number_of_Dicoms_on_right_Date = len(soup.find_all('td', string=re.compile(date_to_find)))
-    print('number of Dicoms on date of intrest')
+    print('number of Dicoms on date of interest')
     print(number_of_Dicoms_on_right_Date)
     # Now to record the number of in range (should only be 1 for yes or 0 for nune however it's possible there are
     # more then one.
     # if there is only valid one in the list, create new folder and Select
     if number_of_Dicoms_on_right_Date == 1:
-        path = os.path.join('C:\\briccs_ct\\', NextInList_bpt)
+        path = os.path.join(storage_location, NextInList_bpt)
         print("folder to save is")
         print(path)
         if not os.path.exists(path):
             os.makedirs(path)
         listTableForm = driver.find_element_by_name("listTableForm")
         d_found_at = soup.find('td', string=re.compile(date_to_find))
-        # images_toProcess is reliant on the img column being two to the right of the date column, if it's not use settings
+        # images_toProcess is reliant on the img column being two to the right of the date column
         images_to_process = int(d_found_at.find_next_sibling().find_next_sibling().string)
         sleep(1)
         listTableForm.click()
@@ -205,7 +191,7 @@ while i < finish_Line and free_space > 3:
             [NextInList + ',' + NextInList_bpt + ',' + str(number_of_Dicoms_on_right_Date) + ',' + str(
                 datetime.now()) + ',,'])
         print(to_log)
-        with open("C:\\briccs_ct\\results.csv", "ab") as f:
+        with open(storage_location + "results.csv", "ab") as f:
             np.savetxt(f, (to_log), fmt='%s', delimiter=' ')
     ########## Export the image
     if continue_to_extract == 1:
@@ -262,45 +248,41 @@ while i < finish_Line and free_space > 3:
             # The next while loop should stop the screen from locking (which messes up the program) by
             # keyboard interaction every minute, until it's next time to check .
             while timer > 60:
-                #sleep(1)
+                # sleep(1)
                 # The below wasn't preventing the screen lock kicking in so has been commented out.
                 print('Timer set to:', str(timer), ' ...sleeping for a min')
                 sleep(60)
-                #pyautogui.press('volumedown')
-                #sleep(.5)
-                #pyautogui.press('volumeup')
-                #sleep(.5)
+                # pyautogui.press('volumedown')
+                # sleep(.5)
+                # pyautogui.press('volumeup')
+                # sleep(.5)
                 ES_CONTINUOUS = 0x80000000
                 ES_SYSTEM_REQUIRED = 0x00000001
                 ES_DISPLAY_REQUIRED = 0x00000002
-                #ES_AWAYMODE_REQUIRED = 0x00000040
+                # ES_AWAYMODE_REQUIRED = 0x00000040
                 # #pyautogui.typewrite('')
                 ##pyautogui.moveRel(xOffset, yOffset, duration=num_seconds)
-                #pyautogui.moveRel(20, 30, duration=.5)
-                #pyautogui.moveRel(-20, -30, duration=.5)
-                timer = max(timer-60, 1)
+                # pyautogui.moveRel(20, 30, duration=.5)
+                # pyautogui.moveRel(-20, -30, duration=.5)
+                timer = max(timer - 60, 1)
             sleep(timer)
             print('Timer set to:', str(timer), ' ...finished sleep.')
         finished_downloading = datetime.now()
         to_log = np.array(
             [NextInList + ',' + NextInList_bpt + ',' + str(number_of_Dicoms_on_right_Date) + ',' +
-                str(starting_download) + ',' + str(datetime.now()) + ','])
+             str(starting_download) + ',' + str(datetime.now()) + ','])
         print(to_log)
-        with open("C:\\briccs_ct\\results.csv", "ab") as f:
+        with open("U:\\Dicom\\results.csv", "ab") as f:
             np.savetxt(f, (to_log), fmt='%s', delimiter=' ')
         download_took = finished_downloading - starting_download
-        sleep(2)
-        pyautogui.keyDown('alt')
-        pyautogui.press('f4')
-        pyautogui.keyUp('alt')
-        sleep(1)
-        pyautogui.press('return')
-        sleep(1)
+        close_study()
         print(NextInList_bpt + " finished! Time taken(h:mm:ss.ms):", download_took)
     i = i + 1
 
-    free_space = round(psutil.disk_usage(".").free / 1000000000, 1)
-    print('free space on storage drive:',free_space, ' GB')
+    free_space = round(psutil.disk_usage("U:\\").free / 1000000000, 1)
+    print('free space on storage drive:', free_space, ' GB')
+    if free_space < free_space_limit:
+        raise Exception('insufficient storage')
 
 print('Finished First Pass of all of them')
 ############################## reiterate now
