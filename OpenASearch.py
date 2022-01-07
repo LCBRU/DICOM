@@ -18,7 +18,9 @@ import ctypes
 
 # vars
 free_space_limit = 2
-storage_location = "U:\\Dicom\\"
+# U is Archive01 Z is Archive02 (overflow as needed more space)
+#storage_location = "U:\\Dicom\\"
+storage_location = "Z:\\Dicom\\"
 
 # SQL connection
 conn = pyodbc.connect('Driver={SQL Server};'
