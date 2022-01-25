@@ -8,3 +8,4 @@ requests
 pywinauto
 pyautogui
 psutil
+wakepy

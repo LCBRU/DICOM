@@ -274,14 +274,14 @@ while i < finish_line and free_space >= free_space_limit:
             [NextInList + ',' + NextInList_bpt + ',' + str(number_of_Dicoms_on_right_Date) + ',' +
              str(starting_download) + ',' + str(datetime.now()) + ','])
         print(to_log)
-        with open("U:\\Dicom\\results.csv", "ab") as f:
+        with open(storage_location + "results.csv", "ab") as f:
             np.savetxt(f, (to_log), fmt='%s', delimiter=' ')
         download_took = finished_downloading - starting_download
         close_study()
         print(NextInList_bpt + " finished! Time taken(h:mm:ss.ms):", download_took)
     i = i + 1
 
-    free_space = round(psutil.disk_usage("U:\\").free / 1000000000, 1)
+    free_space = round(psutil.disk_usage(storage_location).free / 1000000000, 1)
     print('free space on storage drive:', free_space, ' GB')
     if free_space < free_space_limit:
         raise Exception('insufficient storage')
