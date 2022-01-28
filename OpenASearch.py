@@ -96,7 +96,7 @@ def close_study():
     pyautogui.keyDown('alt')
     pyautogui.press('f4')
     pyautogui.keyUp('alt')
-    sleep(1)
+    sleep(3)
     pyautogui.press('return')
     sleep(1)
 
@@ -230,7 +230,7 @@ while i < finish_line and free_space >= free_space_limit:
         starting_download = datetime.now()
         pyautogui.press('return')  # time to save the files!
         # take about ten minutes to save the stuff to C drive so wait at least 5 mins before starting to check
-        sleep(10)  # 300 when go live
+        sleep(300)  # 300 when go live
         images_to_do = images_to_process
         # keep checking for finished!
         while images_to_do > 1:
@@ -252,7 +252,7 @@ while i < finish_line and free_space >= free_space_limit:
             while timer > 60:
                 # sleep(1)
                 # The below wasn't preventing the screen lock kicking in so has been commented out.
-                print('Timer set to:', str(timer), ' ...sleeping for a min')
+                # print('Timer set to:', str(timer), ' ...sleeping for a min')
                 sleep(60)
                 # pyautogui.press('volumedown')
                 # sleep(.5)
