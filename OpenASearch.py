@@ -197,7 +197,7 @@ while i < finish_line and free_space >= free_space_limit:
             np.savetxt(f, (to_log), fmt='%s', delimiter=' ')
     ########## Export the image
     if continue_to_extract == 1:
-        sleep(25)  # page loading, for participants with loads of images this can take some time.
+        sleep(72)  # page loading, for participants with loads of images this can take some time.
         pyautogui.press('f12')  # opens the save images windows, focused on save button by default
         sleep(2)
         pyautogui.typewrite('d')  # set file type to DICOM(*.dcm)
