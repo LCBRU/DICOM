@@ -83,12 +83,12 @@ def log_me_in():
     mypass = f.readline()
     f.close()
     sleep(1)
-    username = driver.find_element_by_id("userName")
+    username = driver.find_element("userName") #find_element_by_id
     username.send_keys(myid)
     sleep(1)
-    password = driver.find_element_by_id("password")
+    password = driver.find_element("password") #find_element_by_id
     password.send_keys(mypass)
-    login = driver.find_element_by_name("login")
+    login = driver.find_element("login") #find_element_by_name
     login.click()
 
 def close_study():
@@ -146,14 +146,14 @@ while i < finish_line and free_space >= free_space_limit:
     driver.switch_to.frame("LIST")
     ########## Enter details for search and submit
     sleep(1)
-    driver.find_element_by_name("searchPatientId").send_keys(NextInList)
-    driver.find_element_by_name("searchFirstName").click()  # click away from searchPatientId to enable searchStudyDescr
+    driver.find_element("searchPatientId").send_keys(NextInList) #find_element_by_name x 3 for next few lines
+    driver.find_element("searchFirstName").click()  # click away from searchPatientId to enable searchStudyDescr
     # driver.execute_script("dialogForm.searchOrderStatus[8].click();") # sets to complete, however we mhy also want read offline...
     driver.execute_script("dialogForm.searchImgCnt.click();")  # only studys with images
-    driver.find_element_by_name("searchStudyDescr").send_keys("CT Cardiac angiogram")
+    driver.find_element("searchStudyDescr").send_keys("CT Cardiac angiogram")
     driver.switch_to.window(advsearchwindow)
     driver.switch_to.frame("TOOLBAR")
-    butts = driver.find_elements_by_class_name("search_button")
+    butts = driver.find_elements("search_button") #find_elements_by_class_name
     butts[0].click()
     sleep(3)
     # driver.window_handles by monitoring the window_handles it seems to close the connection!!!!!!!!!!
@@ -230,7 +230,7 @@ while i < finish_line and free_space >= free_space_limit:
         starting_download = datetime.now()
         pyautogui.press('return')  # time to save the files!
         # take about ten minutes to save the stuff to C drive so wait at least 5 mins before starting to check
-        sleep(300)  # 300 when go live
+        sleep(120)
         images_to_do = images_to_process
         # keep checking for finished!
         while images_to_do > 1:
