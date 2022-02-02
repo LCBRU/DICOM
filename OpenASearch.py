@@ -87,9 +87,9 @@ def log_me_in():
     username = driver.find_element(By.ID,"userName") #find_element_by_id
     username.send_keys(myid)
     sleep(1)
-    password = driver.find_element(By.ID"password") #find_element_by_id
+    password = driver.find_element(By.ID,"password") #find_element_by_id
     password.send_keys(mypass)
-    login = driver.find_element(By.NAME"login") #find_element_by_name
+    login = driver.find_element(By.NAME,"login") #find_element_by_name
     login.click()
 
 def close_study():
