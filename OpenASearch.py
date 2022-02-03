@@ -20,7 +20,7 @@ import ctypes
 # vars
 free_space_limit = 2
 # U is Archive01 Z is Archive02 (overflow as needed more space)
-#storage_location = "U:\\Dicom\\"
+# storage_location = "U:\\Dicom\\"
 storage_location = "Z:\\Dicom\\"
 
 # SQL connection
@@ -41,6 +41,7 @@ def storage_check():
     print('free space on storage drive:', free_space, ' GB')
     if free_space < free_space_limit:
         raise Exception('insufficient storage')
+
 
 def build_lists_of_to_do():
     global list_to_dicom
@@ -72,7 +73,6 @@ def build_lists_of_to_do():
     print(list_to_dicom.index.max())
 
 
-
 def log_me_in():
     global driver, f
     driver = webdriver.Ie()
@@ -84,13 +84,14 @@ def log_me_in():
     mypass = f.readline()
     f.close()
     sleep(1)
-    username = driver.find_element(By.ID,"userName") #find_element_by_id
+    username = driver.find_element(By.ID, "userName")  # find_element_by_id
     username.send_keys(myid)
     sleep(1)
-    password = driver.find_element(By.ID,"password") #find_element_by_id
+    password = driver.find_element(By.ID, "password")  # find_element_by_id
     password.send_keys(mypass)
-    login = driver.find_element(By.NAME,"login") #find_element_by_name
+    login = driver.find_element(By.NAME, "login")  # find_element_by_name
     login.click()
+
 
 def close_study():
     sleep(2)
@@ -100,6 +101,7 @@ def close_study():
     sleep(3)
     pyautogui.press('return')
     sleep(1)
+
 
 storage_check()
 build_lists_of_to_do()
@@ -147,14 +149,15 @@ while i < finish_line and free_space >= free_space_limit:
     driver.switch_to.frame("LIST")
     ########## Enter details for search and submit
     sleep(1)
-    driver.find_element(By.NAME,"searchPatientId").send_keys(NextInList) #find_element_by_name x 3 for next few lines
-    driver.find_element(By.NAME,"searchFirstName").click()  # click away from searchPatientId to enable searchStudyDescr
+    driver.find_element(By.NAME, "searchPatientId").send_keys(NextInList)  # find_element_by_name x 3 for next few lines
+    driver.find_element(By.NAME,
+                        "searchFirstName").click()  # click away from searchPatientId to enable searchStudyDescr
     # driver.execute_script("dialogForm.searchOrderStatus[8].click();") # sets to complete, however we mhy also want read offline...
     driver.execute_script("dialogForm.searchImgCnt.click();")  # only studys with images
-    driver.find_element(By.NAME,"searchStudyDescr").send_keys("CT Cardiac angiogram")
+    driver.find_element(By.NAME, "searchStudyDescr").send_keys("CT Cardiac angiogram")
     driver.switch_to.window(advsearchwindow)
     driver.switch_to.frame("TOOLBAR")
-    butts = driver.find_elements(By.CLASS_NAME,"search_button") #find_elements_by_class_name
+    butts = driver.find_elements(By.CLASS_NAME, "search_button")  # find_elements_by_class_name
     butts[0].click()
     sleep(3)
     # driver.window_handles by monitoring the window_handles it seems to close the connection!!!!!!!!!!
@@ -181,7 +184,7 @@ while i < finish_line and free_space >= free_space_limit:
         print(path)
         if not os.path.exists(path):
             os.makedirs(path)
-        listTableForm = driver.find_element_by_name("listTableForm")
+        listTableForm = driver.find_element(By.NAME, "listTableForm")
         d_found_at = soup.find('td', string=re.compile(date_to_find))
         # images_toProcess is reliant on the img column being two to the right of the date column
         images_to_process = int(d_found_at.find_next_sibling().find_next_sibling().string)
@@ -198,7 +201,7 @@ while i < finish_line and free_space >= free_space_limit:
             np.savetxt(f, (to_log), fmt='%s', delimiter=' ')
     ########## Export the image
     if continue_to_extract == 1:
-        sleep(images_to_process/75)  # page loading, for participants with loads of images this can take some time.
+        sleep(images_to_process / 75)  # page loading, for participants with loads of images this can take some time.
         pyautogui.press('f12')  # opens the save images windows, focused on save button by default
         sleep(2)
         pyautogui.typewrite('d')  # set file type to DICOM(*.dcm)
