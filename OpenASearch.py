@@ -202,7 +202,7 @@ while i < finish_line and free_space >= free_space_limit:
     ########## Export the image
     if continue_to_extract == 1:
         sleep(images_to_process / 75)  # page loading, for participants with loads of images this can take some time.
-        sleep(5)  # when there is VERY few the above line will not be enough
+        sleep(20)  # when there is VERY few the above line will not be enough
         pyautogui.press('f12')  # opens the save images windows, focused on save button by default
         sleep(2)
         pyautogui.typewrite('d')  # set file type to DICOM(*.dcm)
