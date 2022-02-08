@@ -105,6 +105,8 @@ def close_study():
 
 storage_check()
 build_lists_of_to_do()
+
+
 log_me_in()
 
 pacsWindow = driver.window_handles
@@ -115,6 +117,98 @@ print(pacsWindow)
 finish_line = list_to_dicom.index.max()
 print(finish_line)
 i = 0
+
+
+def wait_and_log():
+    global f, images_to_do
+    number_of_dicoms_downloaded = len([f for f in listdir(path) if isfile(join(path, f))])
+    # occasionally an extra file is found and downloaded hence the need to prevent a negative number.
+    images_to_do = max(images_to_process - number_of_dicoms_downloaded, 0)
+    message = str(number_of_dicoms_downloaded) + ' of ' + str(images_to_process) + ' downloaded, ' + str(
+        images_to_do) + ' to do.'
+    print(message)
+    print('Time now:', str(datetime.now()))
+    # for setting sleep, it takes about .7 seconds per file, this means we've check just before the extract is
+    # due to finish, this prevents output going overboard. + 2 to ensure near completion it's not logging many
+    # near the end.
+    timer = round(images_to_do * .7, 0)
+    print('Timer set to:', str(timer))
+    # The next while loop should stop the screen from locking (which messes up the program) by
+    # keyboard interaction every minute, until it's next time to check .
+    while timer > 60:
+        # sleep(1)
+        # The below wasn't preventing the screen lock kicking in so has been commented out.
+        # print('Timer set to:', str(timer), ' ...sleeping for a min')
+        sleep(60)
+        # pyautogui.press('volumedown')
+        # sleep(.5)
+        # pyautogui.press('volumeup')
+        # sleep(.5)
+        ES_CONTINUOUS = 0x80000000
+        ES_SYSTEM_REQUIRED = 0x00000001
+        ES_DISPLAY_REQUIRED = 0x00000002
+        # ES_AWAYMODE_REQUIRED = 0x00000040
+        # #pyautogui.typewrite('')
+        ##pyautogui.moveRel(xOffset, yOffset, duration=num_seconds)
+        # pyautogui.moveRel(20, 30, duration=.5)
+        # pyautogui.moveRel(-20, -30, duration=.5)
+        timer = max(timer - 60, 1)
+    sleep(timer)
+    print('Timer set to:', str(timer), ' ...finished sleep.')
+
+
+def start_download():
+    global images_to_do, to_log, f
+    sleep(images_to_process / 75)  # page loading, for participants with loads of images this can take some time.
+    sleep(10)  # when there is VERY few the above line will not be enough
+    pyautogui.press('f12')  # opens the save images windows, focused on save button by default
+    sleep(2)
+    pyautogui.typewrite('d')  # set file type to DICOM(*.dcm)
+    sleep(1)
+    pyautogui.press('tab')  # tab over to folder
+    sleep(.1)
+    pyautogui.press('tab')
+    sleep(.1)
+    pyautogui.press('tab')
+    sleep(.1)
+    pyautogui.press('tab')
+    sleep(.1)
+    pyautogui.typewrite(path)  # set to predefined path
+    sleep(1)
+    pyautogui.press('tab')  # tab apply to images
+    sleep(.1)
+    pyautogui.press('down')
+    sleep(.1)  # select the non-default save 'Entire Study' (two down from default)
+    pyautogui.press('down')
+    sleep(.1)
+    pyautogui.press('tab')
+    sleep(.1)
+    pyautogui.press('tab')  # should save you're last settings so shouldn't need to check not create subfolder
+    # sleep(.1)
+    # pyautogui.press('space')           # click not create subfolder      # select File Name Header and type bpt number in
+    sleep(1)
+    pyautogui.typewrite(NextInList_bpt)
+    # option - anonymise should always be defult and checked
+    pyautogui.press('tab')  # tab to the save button
+    starting_download = datetime.now()
+    pyautogui.press('return')  # time to save the files!
+    # take about ten minutes to save the stuff to C drive so wait at least 5 mins before starting to check
+    sleep(120)
+    images_to_do = images_to_process
+    # keep checking for finished!
+    while images_to_do > 1:
+        wait_and_log()
+    finished_downloading = datetime.now()
+    to_log = np.array(
+        [NextInList + ',' + NextInList_bpt + ',' + str(number_of_Dicoms_on_right_Date) + ',' +
+         str(starting_download) + ',' + str(datetime.now()) + ','])
+    print(to_log)
+    with open(storage_location + "results.csv", "ab") as f:
+        np.savetxt(f, (to_log), fmt='%s', delimiter=' ')
+    download_took = finished_downloading - starting_download
+    close_study()
+    print(NextInList_bpt + " finished! Time taken(h:mm:ss.ms):", download_took)
+
 
 while i < finish_line and free_space >= free_space_limit:
     print("starting loop " + str(i))
@@ -201,89 +295,7 @@ while i < finish_line and free_space >= free_space_limit:
             np.savetxt(f, (to_log), fmt='%s', delimiter=' ')
     ########## Export the image
     if continue_to_extract == 1:
-        sleep(images_to_process / 75)  # page loading, for participants with loads of images this can take some time.
-        sleep(10)  # when there is VERY few the above line will not be enough
-        pyautogui.press('f12')  # opens the save images windows, focused on save button by default
-        sleep(2)
-        pyautogui.typewrite('d')  # set file type to DICOM(*.dcm)
-        sleep(1)
-        pyautogui.press('tab')  # tab over to folder
-        sleep(.1)
-        pyautogui.press('tab')
-        sleep(.1)
-        pyautogui.press('tab')
-        sleep(.1)
-        pyautogui.press('tab')
-        sleep(.1)
-        pyautogui.typewrite(path)  # set to predefined path
-        sleep(1)
-        pyautogui.press('tab')  # tab apply to images
-        sleep(.1)
-        pyautogui.press('down')
-        sleep(.1)  # select the non-default save 'Entire Study' (two down from default)
-        pyautogui.press('down')
-        sleep(.1)
-        pyautogui.press('tab')
-        sleep(.1)
-        pyautogui.press('tab')  # should save you're last settings so shouldn't need to check not create subfolder
-        # sleep(.1)
-        # pyautogui.press('space')           # click not create subfolder      # select File Name Header and type bpt number in
-        sleep(1)
-        pyautogui.typewrite(NextInList_bpt)
-        # option - anonymise should always be defult and checked
-        pyautogui.press('tab')  # tab to the save button
-        starting_download = datetime.now()
-        pyautogui.press('return')  # time to save the files!
-        # take about ten minutes to save the stuff to C drive so wait at least 5 mins before starting to check
-        sleep(120)
-        images_to_do = images_to_process
-        # keep checking for finished!
-        while images_to_do > 1:
-            number_of_dicoms_downloaded = len([f for f in listdir(path) if isfile(join(path, f))])
-            # occasionally an extra file is found and downloaded hence the need to prevent a negative number.
-            images_to_do = max(images_to_process - number_of_dicoms_downloaded, 0)
-            message = str(number_of_dicoms_downloaded) + ' of ' + str(images_to_process) + ' downloaded, ' + str(
-                images_to_do) + ' to do.'
-            print(message)
-            print('Time now:', str(datetime.now()))
-            # for setting sleep, it takes about .7 seconds per file, this means we've check just before the extract is
-            # due to finish, this prevents output going overboard. + 2 to ensure near completion it's not logging many
-            # near the end.
-            timer = round(images_to_do * .7, 0)
-
-            print('Timer set to:', str(timer))
-            # The next while loop should stop the screen from locking (which messes up the program) by
-            # keyboard interaction every minute, until it's next time to check .
-            while timer > 60:
-                # sleep(1)
-                # The below wasn't preventing the screen lock kicking in so has been commented out.
-                # print('Timer set to:', str(timer), ' ...sleeping for a min')
-                sleep(60)
-                # pyautogui.press('volumedown')
-                # sleep(.5)
-                # pyautogui.press('volumeup')
-                # sleep(.5)
-                ES_CONTINUOUS = 0x80000000
-                ES_SYSTEM_REQUIRED = 0x00000001
-                ES_DISPLAY_REQUIRED = 0x00000002
-                # ES_AWAYMODE_REQUIRED = 0x00000040
-                # #pyautogui.typewrite('')
-                ##pyautogui.moveRel(xOffset, yOffset, duration=num_seconds)
-                # pyautogui.moveRel(20, 30, duration=.5)
-                # pyautogui.moveRel(-20, -30, duration=.5)
-                timer = max(timer - 60, 1)
-            sleep(timer)
-            print('Timer set to:', str(timer), ' ...finished sleep.')
-        finished_downloading = datetime.now()
-        to_log = np.array(
-            [NextInList + ',' + NextInList_bpt + ',' + str(number_of_Dicoms_on_right_Date) + ',' +
-             str(starting_download) + ',' + str(datetime.now()) + ','])
-        print(to_log)
-        with open(storage_location + "results.csv", "ab") as f:
-            np.savetxt(f, (to_log), fmt='%s', delimiter=' ')
-        download_took = finished_downloading - starting_download
-        close_study()
-        print(NextInList_bpt + " finished! Time taken(h:mm:ss.ms):", download_took)
+        start_download()
     i = i + 1
 
     free_space = round(psutil.disk_usage(storage_location).free / 1000000000, 1)
