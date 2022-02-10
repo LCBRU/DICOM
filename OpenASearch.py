@@ -304,21 +304,6 @@ while i < finish_line and free_space >= free_space_limit:
         raise Exception('insufficient storage')
 
 print('Finished First Pass of all of them')
-############################## reiterate now
-
-
-# pyautogui.click('exit.jpg') # need to exit now, not sure how to....
-
-
-# Root folder to be bptnumber
-# sleep(600) # 10 expect a ten minute download time.
-# find icon (done).Click
-##########
-
-
-# END Start again with next in set!
-
-
 ###################################################
 #################     Apendix     #################
 ###################################################
